@@ -1,0 +1,33 @@
+{
+  "name": "services",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch --hot ./src/index.ts",
+    "lint": "bunx @biomejs/biome check --write . && bun typecheck",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@adraffy/ens-normalize": "^1.10.1",
+    "@octokit/rest": "^21.0.2",
+    "consola": "^3.2.3",
+    "exit-hook": "^4.0.0",
+    "heap-js": "^2.3.0",
+    "kysely": "^0.27.2",
+    "kysely-postgres-js": "^2.0.0",
+    "postgres": "^3.4.3",
+    "std-env": "^3.7.0",
+    "viem": "^2.5.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.7.3",
+    "@total-typescript/ts-reset": "^0.5.1",
+    "@types/bun": "^1.0.4",
+    "@types/node": "^20.11.6",
+    "bun": "^1.0.25",
+    "dbmate": "^2.11.0",
+    "kysely-codegen": "^0.11.0",
+    "pg": "^8.11.3",
+    "typescript": "^5.3.3"
+  }
+}
