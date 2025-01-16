@@ -10,6 +10,7 @@ import { recentFollows } from "#/services/recentFollows";
 import { recommended } from "#/services/recommended";
 import { efpCache } from "./services/efpCache";
 import { mutuals } from "./services/mutuals";
+import { log } from "node:console";
 
 class ServiceManager {
 	private serviceQueue: (() => Promise<void>)[] = [];
@@ -77,13 +78,19 @@ async function main() {
 	logger.box("EFP SERVICE MANAGER");
 	const serviceManager = new ServiceManager();
 
+    logger.log("Executing start up services...");
+    await efpCache();
+    await leaderboard();
+    await mutuals();
+    await leaderboard();
+
 	logger.log("Registering Services...");
 	for (const { service, interval } of services) {
 		setInterval(() => {
 			serviceManager.addService(service);
 		}, interval);
 	}
-
+    logger.log("[Running]");
 	for (;;) {
 		try {
 			logger.log(colors.gray("..."));
