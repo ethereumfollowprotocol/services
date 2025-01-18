@@ -1,14 +1,18 @@
 export const List_A = [
 	"brantly.eth",
+    "encrypteddegen.eth",
+    "0xthrpw.eth",
+    "caveman.eth"
 ];
 
 export const List_B = [
-    "vitalik.eth",
-	"efp.eth",
+    "bendi.eth",
+    "pell.eth",
+    "cerealsabre.eth"
 ];
 
 export const List_C = [
-    "0xthrpw.eth",
-    "encrypteddegen.eth",
-    "bendi.eth",
+    "efp.eth",
+    "identitykit.eth",
+    "vitalik.eth"
 ];
