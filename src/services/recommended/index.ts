@@ -58,7 +58,7 @@ async function importList(list: string[], _class: string) {
 	logger.log(colors.yellow('[recommended]'), `Fetching ENS data in ${formattedBatches.length} chunks...`);
 	const response = await Promise.all(
 		formattedBatches.map((batch) => {
-			return fetch(`${env.ENS_API_URL}bulk/n?${batch}`);
+			return fetch(`${env.ENS_API_URL}/bulk/n?${batch}`);
 		}),
 	);
 	logger.log(colors.yellow('[recommended]'), "Resolving responses...");
@@ -89,7 +89,7 @@ async function importList(list: string[], _class: string) {
     logger.log(colors.yellow('[recommended]'), `Fetching ENS data from addresses in ${refetchBatches.length} chunks...`);
     const refetchResponse = await Promise.all(
         refetchBatches.map((batch) => {
-            return fetch(`${env.ENS_API_URL}bulk/a?${batch}`);
+            return fetch(`${env.ENS_API_URL}/bulk/a?${batch}`);
         }),
     );
     logger.log(colors.yellow('[recommended]'), "Reverse resolving responses...");

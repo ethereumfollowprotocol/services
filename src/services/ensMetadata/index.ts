@@ -25,7 +25,7 @@ export async function ensMetadata() {
     logger.log(colors.cyan('[ens]'), `Fetching ENS data in ${formattedBatches.length} chunks...`)
     const response = await Promise.all(
       formattedBatches.map(batch => {
-        return fetch(`${env.ENS_API_URL}bulk/a?${batch}`)
+        return fetch(`${env.ENS_API_URL}/bulk/a?${batch}`)
       })
     )
     logger.log(colors.cyan('[ens]'), `Resolving ENS requests...`)
