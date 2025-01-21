@@ -44,7 +44,8 @@ export async function ensMetadata() {
     logger.log(colors.cyan('[ens]'), `Formatting ENS requests...`)
     const validResponses = data.filter(datum => datum)
     const fetchedRecords = validResponses.flatMap(datum => datum.response)
-    const filteredRecords = fetchedRecords.filter(record => record.address && record.type === 'success')
+    const nonZeroAddressRecords = fetchedRecords.filter(record => record.address && record.address !== '0x0000000000000000000000000000000000000000')
+    const filteredRecords = nonZeroAddressRecords.filter(record => record.address && record.type === 'success')
     logger.log(colors.cyan('[ens]'), `fetchedRecords ${fetchedRecords.length}`)
     logger.log(colors.cyan('[ens]'), `filteredRecords ${filteredRecords.length}`)
 
@@ -78,11 +79,15 @@ export async function ensMetadata() {
             : `https://metadata.ens.domains/mainnet/avatar/${record.name}`
       }
     })
-    logger.log(colors.cyan('[ens]'), `Updating ENS Cache: ${formatted.length} records...`)
-    if (formatted.length > 0) {
+    const uniqueFormatted = formatted.filter((item, index, self) =>
+        self.findIndex((obj) => obj.address === item.address) === index
+    );
+
+    logger.log(colors.cyan('[ens]'), `Updating ENS Cache: ${uniqueFormatted.length} records...`)
+    if (uniqueFormatted.length > 0) {
       const insertENSCache = await database
         .insertInto('ens_metadata')
-        .values(formatted)
+        .values(uniqueFormatted)
         .onConflict(oc =>
           oc.column('address').doUpdateSet(eb => ({
             name: eb.ref('excluded.name'),
