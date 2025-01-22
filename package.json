@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --watch --hot ./src/index.ts",
+    "start": "bun ./src/index.ts",
     "lint": "bunx @biomejs/biome check --write . && bun typecheck",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
