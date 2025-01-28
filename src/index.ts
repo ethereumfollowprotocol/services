@@ -79,6 +79,7 @@ async function main() {
 	const serviceManager = new ServiceManager();
 
     logger.log("Executing start up services...");
+    await sendHeartbeat();
     await efpCache();
     await leaderboard();
     await mutuals();

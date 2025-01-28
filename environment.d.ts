@@ -8,7 +8,7 @@ interface EnvironmentVariables {
     readonly RECOMMENDED_INTERVAL: number;
     readonly ENSMETADATA_INTERVAL: number;
     readonly HEARTBEAT_INTERVAL: number;
-    readonly SNITCH_ID: string;
+    readonly HEARTBEAT_URL: string;
     readonly EFP_CACHE_INTERVAL: number;
     readonly EFP_MUTUALS_INTERVAL: number;
     readonly GITHUB_ACCESS_TOKEN: string;
