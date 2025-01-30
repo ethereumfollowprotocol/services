@@ -85,18 +85,26 @@ export async function ensMetadata() {
 
     logger.log(colors.cyan('[ens]'), `Updating ENS Cache: ${uniqueFormatted.length} records...`)
     if (uniqueFormatted.length > 0) {
-      const insertENSCache = await database
-        .insertInto('ens_metadata')
-        .values(uniqueFormatted)
-        .onConflict(oc =>
-          oc.column('address').doUpdateSet(eb => ({
-            name: eb.ref('excluded.name'),
-            avatar: eb.ref('excluded.avatar'),
-            records: eb.ref('excluded.records')
-          }))
-        )
-        .executeTakeFirst()
+        const batchSize = 5000
+        const batches = arrayToChunks(uniqueFormatted, batchSize)
+        for (const batch of batches) {
+            const insertENSCache = await database
+            .insertInto('ens_metadata')
+            .values(batch)
+            .onConflict(oc =>
+              oc.column('address').doUpdateSet(eb => ({
+                name: eb.ref('excluded.name'),
+                avatar: eb.ref('excluded.avatar'),
+                records: eb.ref('excluded.records')
+              }))
+            )
+            .executeTakeFirst()
+            if (insertENSCache.numInsertedOrUpdatedRows !== BigInt(batch.length)) {
+                logger.error(`Failed to insert leaderboard rows ${JSON.stringify(batch)}`)
+            }
+        }
     }
+
     logger.log(colors.cyan('[ens]'), colors.green('Done!'))
     
   } catch (error) {
