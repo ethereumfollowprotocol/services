@@ -84,6 +84,7 @@ async function main() {
     await leaderboard();
     await mutuals();
     await leaderboard();
+    await ensMetadata();
 
 	logger.log("Registering Services...");
 	for (const { service, interval } of services) {
