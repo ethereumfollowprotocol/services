@@ -104,19 +104,7 @@ export async function ensMetadata() {
             }
         }
     }
-    // if (uniqueFormatted.length > 0) {
-    //   const insertENSCache = await database
-    //     .insertInto('ens_metadata')
-    //     .values(uniqueFormatted)
-    //     .onConflict(oc =>
-    //       oc.column('address').doUpdateSet(eb => ({
-    //         name: eb.ref('excluded.name'),
-    //         avatar: eb.ref('excluded.avatar'),
-    //         records: eb.ref('excluded.records')
-    //       }))
-    //     )
-    //     .executeTakeFirst()
-    // }
+
     logger.log(colors.cyan('[ens]'), colors.green('Done!'))
     
   } catch (error) {
