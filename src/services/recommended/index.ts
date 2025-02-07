@@ -77,7 +77,7 @@ async function importList(list: string[], _class: string) {
 	const validResponses = data.filter((datum) => datum);
 	const fetchedRecords = validResponses.flatMap((datum) => datum.response);
 	const filteredRecords = fetchedRecords.filter(
-		(record) => record.type === "success",
+		(record) => record.type === "success" && record.address,
 	);
 	logger.log(colors.yellow('[recommended]'), `fetchedRecords ${fetchedRecords.length}`);
 	logger.log(colors.yellow('[recommended]'), `filteredRecords ${filteredRecords.length}`);
