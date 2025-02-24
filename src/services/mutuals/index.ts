@@ -57,9 +57,9 @@ export async function mutuals(): Promise<void> {
         }
     }
 
-    // logger.log(colors.blueBright('[mutuals]'), `Cleaning up Table...`)
-    // const truncate = sql`TRUNCATE TABLE efp_mutuals`
-    // const clearTable = await truncate.execute(database)
+    logger.log(colors.blueBright('[mutuals]'), `Cleaning up Table...`)
+    const truncate = sql`TRUNCATE TABLE efp_mutuals`
+    const clearTable = await truncate.execute(database)
 
     logger.log(colors.blueBright('[mutuals]'), `Inserting new mutuals data...`)
     const batchSize = 5000
