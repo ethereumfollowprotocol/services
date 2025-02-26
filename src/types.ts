@@ -4,6 +4,7 @@ export type CountRow = {
   address: Address
   name: string
   avatar: string
+  header: string
   mutuals_rank: number
   followers_rank: number
   following_rank: number
