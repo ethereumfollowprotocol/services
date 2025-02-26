@@ -70,6 +70,7 @@ export async function leaderboard(): Promise<void> {
         oc.column('address').doUpdateSet(eb => ({
           name: eb.ref('excluded.name'),
           avatar: eb.ref('excluded.avatar'),
+          header: eb.ref('excluded.header'),
           mutuals_rank: eb.ref('excluded.mutuals_rank'),
           followers_rank: eb.ref('excluded.followers_rank'),
           following_rank: eb.ref('excluded.following_rank'),

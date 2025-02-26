@@ -55,6 +55,7 @@ export interface EfpLeaderboard {
   followers_rank: Int8 | null
   following: Generated<Int8 | null>
   following_rank: Int8 | null
+  header: string | null
   mutuals: Generated<Int8 | null>
   mutuals_rank: Int8 | null
   name: string | null
