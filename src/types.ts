@@ -4,6 +4,7 @@ export type CountRow = {
   address: Address
   name: string
   avatar: string
+  header: string
   mutuals_rank: number
   followers_rank: number
   following_rank: number
@@ -20,6 +21,7 @@ export type LeaderBoardRow = {
   address: Address
   name: string | undefined
   avatar: string | undefined
+  header: string | undefined
   mutuals_rank: number
   followers_rank: number
   following_rank: number

@@ -41,6 +41,7 @@ export async function leaderboard(): Promise<void> {
         address: row.address,
         name: row.name,
         avatar: row.avatar,
+        header: row.header,
         mutuals_rank: row.mutuals_rank,
         followers_rank: row.followers_rank,
         following_rank: row.following_rank,
@@ -60,7 +61,7 @@ export async function leaderboard(): Promise<void> {
     // const clearTable = await truncate.execute(database)
 
     logger.log(colors.blue('[leaderboard]'), `Inserting new leaderboard data...`)
-    const batchSize = 5000
+    const batchSize = 3000
     const batches = arrayToChunks(leaderboard, batchSize)
     for (const batch of batches) {
       const insert = await database.insertInto('efp_leaderboard')
@@ -69,6 +70,7 @@ export async function leaderboard(): Promise<void> {
         oc.column('address').doUpdateSet(eb => ({
           name: eb.ref('excluded.name'),
           avatar: eb.ref('excluded.avatar'),
+          header: eb.ref('excluded.header'),
           mutuals_rank: eb.ref('excluded.mutuals_rank'),
           followers_rank: eb.ref('excluded.followers_rank'),
           following_rank: eb.ref('excluded.following_rank'),
