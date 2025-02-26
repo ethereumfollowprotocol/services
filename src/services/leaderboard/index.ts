@@ -41,6 +41,7 @@ export async function leaderboard(): Promise<void> {
         address: row.address,
         name: row.name,
         avatar: row.avatar,
+        header: row.header,
         mutuals_rank: row.mutuals_rank,
         followers_rank: row.followers_rank,
         following_rank: row.following_rank,

@@ -20,6 +20,7 @@ export type LeaderBoardRow = {
   address: Address
   name: string | undefined
   avatar: string | undefined
+  header: string | undefined
   mutuals_rank: number
   followers_rank: number
   following_rank: number
