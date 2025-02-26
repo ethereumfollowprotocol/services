@@ -61,7 +61,7 @@ export async function leaderboard(): Promise<void> {
     // const clearTable = await truncate.execute(database)
 
     logger.log(colors.blue('[leaderboard]'), `Inserting new leaderboard data...`)
-    const batchSize = 5000
+    const batchSize = 3000
     const batches = arrayToChunks(leaderboard, batchSize)
     for (const batch of batches) {
       const insert = await database.insertInto('efp_leaderboard')
