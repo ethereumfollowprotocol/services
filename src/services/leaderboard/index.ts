@@ -4,9 +4,12 @@ import { logger } from '#/logger'
 import type { CountRow, LeaderBoardRow } from '#/types'
 import { arrayToChunks } from '#/utilities'
 import { colors } from 'consola/utils';
+import { efpCache } from '../efpCache'
 
 export async function leaderboard(): Promise<void> {
   try {
+    logger.log(colors.blue('[leaderboard]'), `Resetting Cache...`)
+    await efpCache()
     logger.log(colors.blue('[leaderboard]'), `Fetching leaderboard counts...`)
     const reloaded = sql<CountRow>`SELECT * FROM query.get_built_leaderboard();`
     // SELECT efp.address,
