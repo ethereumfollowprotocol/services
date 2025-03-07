@@ -13,6 +13,7 @@ export async function recentFollows(): Promise<void> {
         hexlify(r.record_data) AS address,
         lb.name,
         lb.avatar,
+        lb.header,
         lb.followers,
         lb.following,
         0 AS _index
@@ -46,6 +47,7 @@ export async function recentFollows(): Promise<void> {
             address: row.address,
             name: row.name,
             avatar: row.avatar,
+            header: row.header,
             following: row.following,
             followers: row.followers,
             _index: row._index

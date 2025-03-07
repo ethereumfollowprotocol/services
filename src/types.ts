@@ -44,6 +44,7 @@ export type RecentActivityRow = {
     address: Address
     name: string | undefined
     avatar: string | undefined
+    header: string | undefined
     following: number
     followers: number
     _index?: number | undefined
