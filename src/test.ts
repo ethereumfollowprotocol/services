@@ -9,7 +9,7 @@ import { efpCache } from "./services/efpCache";
 import { mutuals } from "./services/mutuals";
 
 async function main() {
-  await recommended();
+  await recentFollows();
 }
 
 main().then(() => {
