@@ -160,6 +160,7 @@ export interface EfpPoapLinks {
 export interface EfpRecommended {
   address: string
   avatar: string | null
+  header: string | null
   class: string | null
   created_at: Generated<Timestamp | null>
   index: Int8

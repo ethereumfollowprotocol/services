@@ -47,6 +47,7 @@ type EFPRecommended = {
 	address: string
 	name: string
 	avatar: string
+    header?: string
 	class: string
 };
 
@@ -147,6 +148,8 @@ async function importList(list: string[], _class: string) {
 	}
 
 	const formattedClass = filteredRecords.map((record) => {
+        const records = (record.records) ? JSON.parse(JSON.stringify(record.records)) : {}
+        
 		return {
 			index: 0, //list.indexOf(record.address),
 			name: record.name,
@@ -157,6 +160,7 @@ async function importList(list: string[], _class: string) {
 				record.avatar?.indexOf("ipfs") !== 0
 					? record.avatar
 					: `https://metadata.ens.domains/mainnet/avatar/${record.name}`,
+            header: records?.header,
 			class: _class,
 		}
 	});
@@ -241,15 +245,15 @@ export async function recommended() {
 	logger.log(colors.yellow('[recommended]'), "Scrambling recommended accounts...");
 	const query = sql<EFPRecommended>`WITH
         ListA_Weighted AS (
-            SELECT name, address, avatar, class,  RANDOM() * 0.5 AS weighted_value
+            SELECT name, address, avatar, header, class,  RANDOM() * 0.5 AS weighted_value
             FROM public.efp_recommended WHERE class = 'A'
         ),
         ListB_Weighted AS (
-            SELECT name, address, avatar, class, .1 + RANDOM() * 0.35 AS weighted_value
+            SELECT name, address, avatar, header, class, .1 + RANDOM() * 0.35 AS weighted_value
             FROM public.efp_recommended WHERE class = 'B'
         ),
         ListC_Weighted AS (
-            SELECT name, address, avatar, class, RANDOM() * 0.2 AS weighted_value
+            SELECT name, address, avatar, header, class, RANDOM() * 0.2 AS weighted_value
             FROM public.efp_recommended WHERE class = 'C'
         ),
         Combined AS (
@@ -259,7 +263,7 @@ export async function recommended() {
             UNION ALL
             SELECT * FROM ListC_Weighted
         )
-        SELECT name, address, avatar, class, weighted_value
+        SELECT name, address, avatar, header, class, weighted_value
         FROM Combined
         ORDER BY weighted_value DESC;`;
 	const result = await query.execute(database);
@@ -271,6 +275,7 @@ export async function recommended() {
 			name: record.name,
 			address: record.address,
 			avatar: record.avatar,
+            header: record.header,
 			class: record.class,
 		};
 		recIndex++;
@@ -289,6 +294,7 @@ export async function recommended() {
 			oc.column("address").doUpdateSet((eb) => ({
 				name: eb.ref("excluded.name"),
 				avatar: eb.ref("excluded.avatar"),
+                header: eb.ref("excluded.header"),
 				class: eb.ref("excluded.class"),
 			})),
 		)
