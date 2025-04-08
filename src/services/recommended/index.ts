@@ -117,7 +117,7 @@ async function importList(list: string[], _class: string) {
 	const formatted = refetchedFilteredRecords.map((record) => {
 		return {
 			name: record.name,
-			address: record.address.toLowerCase(),
+			address: record.address?.toLowerCase(),
 			records: record.records,
 			avatar:
 				record.avatar?.indexOf("http") === 0 &&
