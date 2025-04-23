@@ -13,9 +13,16 @@ let kyselyInstance = new Kysely<DB>({
 })
 
 let retryTimeout: ReturnType<typeof setTimeout> | null = null
+let reconnectCount = 0
+let lastDisconnectAt: number | null = null
+
+// Optional hook: users of this module can assign this to observe reconnection events
+export let onReconnect: ((info: { reconnectCount: number; since: number | null }) => void) | null = null
 
 function scheduleReconnect() {
   if (retryTimeout) return
+  lastDisconnectAt = Date.now()
+
   retryTimeout = setTimeout(() => {
     retryTimeout = null
     try {
@@ -23,7 +30,12 @@ function scheduleReconnect() {
       kyselyInstance = new Kysely<DB>({
         dialect: new PostgresJSDialect({ postgres: postgresClient })
       })
+      reconnectCount++
       console.log('[POSTGRES] Reconnected successfully')
+
+      if (onReconnect) {
+        onReconnect({ reconnectCount, since: lastDisconnectAt })
+      }
     } catch (err) {
       console.error('[POSTGRES] Reconnection attempt failed:', err)
       scheduleReconnect()
@@ -36,9 +48,10 @@ const database: Kysely<DB> = new Proxy({} as Kysely<DB>, {
     const target = kyselyInstance[prop as keyof Kysely<DB>]
 
     if (typeof target === 'function') {
-      return (...args: any[]) => {
+      return async (...args: any[]) => {
         try {
-          return (kyselyInstance[prop as keyof Kysely<DB>] as any)(...args)
+          const result = await (kyselyInstance[prop as keyof Kysely<DB>] as any)(...args)
+          return result
         } catch (err) {
           console.error(`[POSTGRES] Kysely method ${String(prop)} failed:`, err)
           scheduleReconnect()
