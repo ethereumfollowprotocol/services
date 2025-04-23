@@ -7,7 +7,7 @@ import type { DB } from './generated/index.ts'
 
 export type Row<T extends keyof DB> = InsertObject<DB, T>
 
-let postgresClient = postgres(env.DATABASE_URL)
+let postgresClient = postgres(env.DATABASE_URL + '?unique=' + Date.now(), { max: 1 })
 let kyselyInstance = new Kysely<DB>({
   dialect: new PostgresJSDialect({ postgres: postgresClient })
 })
@@ -19,7 +19,7 @@ function scheduleReconnect() {
   retryTimeout = setTimeout(() => {
     retryTimeout = null
     try {
-      postgresClient = postgres(env.DATABASE_URL)
+      postgresClient = postgres(env.DATABASE_URL + '?unique=' + Date.now(), { max: 1 })
       kyselyInstance = new Kysely<DB>({
         dialect: new PostgresJSDialect({ postgres: postgresClient })
       })
