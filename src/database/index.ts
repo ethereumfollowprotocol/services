@@ -48,7 +48,8 @@ function scheduleReconnect() {
   }, 5000)
 }
 
-function wrapQueryErrorHandling<T extends QueryExecutor & { execute: Function; executeTakeFirst: Function; executeTakeFirstOrThrow: Function }>(executor: T): T {  const originalExecute = executor.execute
+function wrapQueryErrorHandling<T extends QueryExecutor & { execute: Function; executeTakeFirst: Function; executeTakeFirstOrThrow: Function }>(executor: T): T {  
+  const originalExecute = executor.execute
   const originalExecuteTakeFirst = executor.executeTakeFirst
   const originalExecuteTakeFirstOrThrow = executor.executeTakeFirstOrThrow
 
