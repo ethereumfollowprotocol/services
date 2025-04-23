@@ -1,4 +1,4 @@
-import { type InsertObject, Kysely } from 'kysely'
+import { type InsertObject, Kysely, type QueryExecutor } from 'kysely'
 import { PostgresJSDialect } from 'kysely-postgres-js'
 import postgres from 'postgres'
 
@@ -7,7 +7,7 @@ import type { DB } from './generated/index.ts'
 
 export type Row<T extends keyof DB> = InsertObject<DB, T>
 
-let postgresClient = postgres(env.DATABASE_URL + '?unique=' + Date.now(), { max: 1 })
+let postgresClient = postgres(env.DATABASE_URL, { max: 1, debug: false, no_cache: true })
 let kyselyInstance = new Kysely<DB>({
   dialect: new PostgresJSDialect({ postgres: postgresClient })
 })
@@ -15,22 +15,26 @@ let kyselyInstance = new Kysely<DB>({
 let retryTimeout: ReturnType<typeof setTimeout> | null = null
 let reconnectCount = 0
 let lastDisconnectAt: number | null = null
+let isReconnecting = false
 
 // Optional hook: users of this module can assign this to observe reconnection events
-export let onReconnect: ((info: { reconnectCount: number; since: number | null }) => void) | null = null
+export let onReconnect: ((info: { reconnectCount: number; since: number | null }) => void) | null = null;
 
 function scheduleReconnect() {
-  if (retryTimeout) return
+  if (retryTimeout || isReconnecting) return
   lastDisconnectAt = Date.now()
+  isReconnecting = true
 
-  retryTimeout = setTimeout(() => {
+  retryTimeout = setTimeout(async () => {
     retryTimeout = null
     try {
-      postgresClient = postgres(env.DATABASE_URL + '?unique=' + Date.now(), { max: 1 })
+      await postgresClient.end({ timeout: 0 }); // clean shutdown of old client
+      postgresClient = postgres(env.DATABASE_URL, { max: 1, debug: false, no_cache: true })
       kyselyInstance = new Kysely<DB>({
         dialect: new PostgresJSDialect({ postgres: postgresClient })
       })
       reconnectCount++
+      isReconnecting = false
       console.log('[POSTGRES] Reconnected successfully')
 
       if (onReconnect) {
@@ -38,29 +42,62 @@ function scheduleReconnect() {
       }
     } catch (err) {
       console.error('[POSTGRES] Reconnection attempt failed:', err)
+      isReconnecting = false
       scheduleReconnect()
     }
   }, 5000)
 }
 
-const database: Kysely<DB> = new Proxy({} as Kysely<DB>, {
-  get(_, prop) {
-    const target = kyselyInstance[prop as keyof Kysely<DB>]
+function wrapQueryErrorHandling<T extends QueryExecutor & { execute: Function; executeTakeFirst: Function; executeTakeFirstOrThrow: Function }>(executor: T): T {  const originalExecute = executor.execute
+  const originalExecuteTakeFirst = executor.executeTakeFirst
+  const originalExecuteTakeFirstOrThrow = executor.executeTakeFirstOrThrow
 
-    if (typeof target === 'function') {
-      return async (...args: any[]) => {
-        try {
-          const result = await (kyselyInstance[prop as keyof Kysely<DB>] as any)(...args)
-          return result
-        } catch (err) {
-          console.error(`[POSTGRES] Kysely method ${String(prop)} failed:`, err)
-          scheduleReconnect()
-          throw err
-        }
+  executor.execute = async function (...args: any[]) {
+    if (isReconnecting) throw new Error('[POSTGRES] Currently reconnecting — query blocked.')
+    try {
+      return await originalExecute.apply(this, args)
+    } catch (err) {
+      console.error('[POSTGRES] Query failed:', err)
+      scheduleReconnect()
+      throw err
+    }
+  }
+
+  executor.executeTakeFirst = async function (...args: any[]) {
+    if (isReconnecting) throw new Error('[POSTGRES] Currently reconnecting — query blocked.')
+    try {
+      return await originalExecuteTakeFirst.apply(this, args)
+    } catch (err) {
+      console.error('[POSTGRES] Query failed:', err)
+      scheduleReconnect()
+      throw err
+    }
+  }
+
+  executor.executeTakeFirstOrThrow = async function (...args: any[]) {
+    if (isReconnecting) throw new Error('[POSTGRES] Currently reconnecting — query blocked.')
+    try {
+      return await originalExecuteTakeFirstOrThrow.apply(this, args)
+    } catch (err) {
+      console.error('[POSTGRES] Query failed:', err)
+      scheduleReconnect()
+      throw err
+    }
+  }
+
+  return executor
+}
+
+const database = new Proxy(kyselyInstance, {
+  get(target, prop, receiver) {
+    const value = Reflect.get(target, prop, receiver)
+    if (typeof value === 'function') {
+      return (...args: any[]) => {
+        const result = value.apply(target, args)
+        return result?.execute ? wrapQueryErrorHandling(result) : result
       }
     }
-
-    return target
+    return value
   }
 })
 

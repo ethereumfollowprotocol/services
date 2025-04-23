@@ -27,6 +27,10 @@ async function buildAddressList(): Promise<void> {
     for (const row of followingResult.rows) {
         addresses.push(row)
     }
+    addresses = addresses.filter((value, index, self) =>
+        index === self.findIndex((t) => t.address.toLowerCase() === value.address.toLowerCase())
+    )
+    addresses = addresses.filter(record => isAddress(record.address) && record.address !== '0x')
 
     logger.log(colors.cyanBright('[efpCache]'), `Cleaning up Table...`)
     const truncate = sql`TRUNCATE TABLE efp_addresses`
