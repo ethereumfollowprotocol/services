@@ -63,16 +63,17 @@ export async function ensMetadata() {
             contenthash: record.contenthash
         }
       }
+      const avatar = !record.avatar ? '' : 
+        record.avatar?.indexOf('http') === 0 &&
+        record.avatar?.indexOf('https://ipfs') !== 0 &&
+        record.avatar?.indexOf('ipfs') !== 0
+            ? record.avatar
+            : `https://metadata.ens.domains/mainnet/avatar/${record.name}`
       return {
         name: name,
         address: record.address?.toLowerCase(),
         records: record.records,
-        avatar:
-          record.avatar?.indexOf('http') === 0 &&
-          record.avatar?.indexOf('https://ipfs') !== 0 &&
-          record.avatar?.indexOf('ipfs') !== 0
-            ? record.avatar
-            : `https://metadata.ens.domains/mainnet/avatar/${record.name}`
+        avatar: avatar
       }
     })
     const uniqueFormattedAddresses = formatted.filter((item, index, self) =>
@@ -91,11 +92,18 @@ export async function ensMetadata() {
             .insertInto('ens_metadata')
             .values(batch)
             .onConflict(oc =>
-              oc.column('address').doUpdateSet(eb => ({
-                name: eb.ref('excluded.name'),
+              oc.column('name').doUpdateSet(eb => ({
+                address: eb.ref('excluded.address'),
                 avatar: eb.ref('excluded.avatar'),
                 records: eb.ref('excluded.records')
               }))
+            )
+            .onConflict(oc =>
+                oc.column('address').doUpdateSet(eb => ({
+                  name: eb.ref('excluded.name'),
+                  avatar: eb.ref('excluded.avatar'),
+                  records: eb.ref('excluded.records')
+                }))
             )
             .executeTakeFirst()
             if (insertENSCache.numInsertedOrUpdatedRows !== BigInt(batch.length)) {
