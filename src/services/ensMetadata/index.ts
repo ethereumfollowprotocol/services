@@ -91,8 +91,8 @@ export async function ensMetadata() {
             .insertInto('ens_metadata')
             .values(batch)
             .onConflict(oc =>
-              oc.column('name').doUpdateSet(eb => ({
-                address: eb.ref('excluded.address'),
+              oc.column('address').doUpdateSet(eb => ({
+                name: eb.ref('excluded.name'),
                 avatar: eb.ref('excluded.avatar'),
                 records: eb.ref('excluded.records')
               }))
