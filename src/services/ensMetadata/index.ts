@@ -11,12 +11,13 @@ import { colors } from 'consola/utils';
 export async function ensMetadata() {
   try {
     logger.log(colors.cyan('[ens]'), `Fetching Users...`)
-    const query = sql<CountRow>`SELECT * FROM public.efp_leaderboard `
+    type addressRow = { address: string }
+    const query = sql<addressRow>`SELECT * FROM public.efp_addresses WHERE address IS NOT NULL AND address != ''`
     const result = await query.execute(database)
 
     const leaderboard: LeaderBoardRow[] = []
     const ensData: ENSProfile[] = []
-    logger.log(colors.cyan('[ens]'), `Fetching ENS data for ${result.rows.length} leaderboard records...`)
+    logger.log(colors.cyan('[ens]'), `Fetching ENS data for ${result.rows.length} address records...`)
 
     const formattedBatches = arrayToChunks(result.rows, 50).map(batch =>
       batch.map(row => `addresses[]=${row.address}`).join('&')
@@ -74,8 +75,11 @@ export async function ensMetadata() {
             : `https://metadata.ens.domains/mainnet/avatar/${record.name}`
       }
     })
-    const uniqueFormatted = formatted.filter((item, index, self) =>
-        self.findIndex((obj) => obj.address === item.address) === index
+    const uniqueFormattedAddresses = formatted.filter((item, index, self) =>
+        self.findIndex((obj) => obj.address?.toLowerCase() === item.address?.toLowerCase()) === index
+    );
+    const uniqueFormatted = uniqueFormattedAddresses.filter((item, index, self) =>
+        self.findIndex((obj) => obj.name === item.name) === index
     );
 
     logger.log(colors.cyan('[ens]'), `Updating ENS Cache: ${uniqueFormatted.length} records...`)

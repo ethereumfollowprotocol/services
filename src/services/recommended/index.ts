@@ -112,6 +112,7 @@ async function importList(list: string[], _class: string) {
     logger.log(colors.yellow('[recommended]'), `refetchedFilteredRecords ${refetchedFilteredRecords.length}`);
 
 	const formatted = refetchedFilteredRecords.map((record) => {
+        console.log(record.address)
 		return {
 			name: record.name,
 			address: record.address?.toLowerCase(),
@@ -135,8 +136,8 @@ async function importList(list: string[], _class: string) {
 			.insertInto("ens_metadata")
 			.values(uniqueFormatted)
 			.onConflict((oc) =>
-				oc.column("name").doUpdateSet((eb) => ({
-					address: eb.ref("excluded.address"),
+				oc.column("address").doUpdateSet((eb) => ({
+					name: eb.ref("excluded.name"),
 					avatar: eb.ref("excluded.avatar"),
 					records: eb.ref("excluded.records"),
 				})),
