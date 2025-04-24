@@ -80,11 +80,10 @@ async function main() {
 
     logger.log("Executing start up services...");
     await sendHeartbeat();
-    await efpCache();
     await leaderboard();
     await mutuals();
     await leaderboard();
-    await ensMetadata();
+    // await ensMetadata();
 
 	logger.log("Registering Services...");
 	for (const { service, interval } of services) {

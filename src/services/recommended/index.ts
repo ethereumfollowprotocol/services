@@ -53,27 +53,25 @@ type EFPRecommended = {
 
 async function importList(list: string[], _class: string) {
 	logger.log(colors.yellow('[recommended]'), "Resolving ENS requests...");
-	const formattedBatches = arrayToChunks(list, 10).map((batch) =>
+	const formattedBatches = arrayToChunks(list, 50).map((batch) =>
 		batch.map((row) => `names[]=${row}`).join("&"),
 	);
 	logger.log(colors.yellow('[recommended]'), `Fetching ENS data in ${formattedBatches.length} chunks...`);
-	const response = await Promise.all(
-		formattedBatches.map((batch) => {
-			return fetch(`${env.ENS_API_URL}/bulk/n?${batch}`);
-		}),
-	);
-	logger.log(colors.yellow('[recommended]'), "Resolving responses...");
-	const data = (await Promise.all(
-		response.map(async (response) => {
-			await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
-			if (response.ok) {
-				return response.json();
-			}
-		}),
-	)) as {
-		response_length: number;
-		response: ENSProfileResponse;
-	}[];
+    const data: { response_length: number; response: ENSProfileResponse }[] = [];
+    for (const batch of formattedBatches) {
+        try {
+            const response = await fetch(`${env.ENS_API_URL}/bulk/n?${batch}`);
+            if (response.ok) {
+                const batchData = await response.json();
+                data.push(batchData);
+            } else {
+                logger.error(colors.red('[recommended]'), `Failed to fetch batch: ${batch}`);
+            }
+        } catch (error) {
+            logger.error(colors.red('[recommended]'), `Error fetching batch: ${batch}`, error);
+        }
+    }
+    logger.log(colors.yellow('[recommended]'), "Resolving responses...");
 	logger.log(colors.yellow('[recommended]'), "Formatting ENS responses...");
 	const validResponses = data.filter((datum) => datum);
 	const fetchedRecords = validResponses.flatMap((datum) => datum.response);
@@ -84,27 +82,26 @@ async function importList(list: string[], _class: string) {
 	logger.log(colors.yellow('[recommended]'), `filteredRecords ${filteredRecords.length}`);
 
     const refetchFormatted = filteredRecords.map((record) => record.address.toLowerCase()); 
-    const refetchBatches = arrayToChunks(refetchFormatted, 10).map((batch) =>
+    const refetchBatches = arrayToChunks(refetchFormatted, 50).map((batch) =>
         batch.map((row) => `addresses[]=${row}`).join("&"),
     );
     logger.log(colors.yellow('[recommended]'), `Fetching ENS data from addresses in ${refetchBatches.length} chunks...`);
-    const refetchResponse = await Promise.all(
-        refetchBatches.map((batch) => {
-            return fetch(`${env.ENS_API_URL}/bulk/a?${batch}`);
-        }),
-    );
     logger.log(colors.yellow('[recommended]'), "Reverse resolving responses...");
-    const refetchData = (await Promise.all(
-        refetchResponse.map(async (response) => {
-            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
+    const refetchData: { response_length: number; response: ENSProfileResponse }[] = [];
+    for (const batch of refetchBatches) {
+        try {
+            const response = await fetch(`${env.ENS_API_URL}/bulk/a?${batch}`);
             if (response.ok) {
-                return response.json();
+                const batchData = await response.json();
+                refetchData.push(batchData);
+            } else {
+                logger.error(colors.red('[recommended]'), `Failed to fetch batch: ${batch}`);
             }
-        }),
-    )) as {
-        response_length: number;
-        response: ENSProfileResponse;
-    }[];
+        } catch (error) {
+            logger.error(colors.red('[recommended]'), `Error fetching batch: ${batch}`, error);
+        }
+    }
+
     logger.log(colors.yellow('[recommended]'), "Formatting ENS responses...");
     const refetchValidResponses = refetchData.filter((datum) => datum);
     const refetchedRecords = refetchValidResponses.flatMap((datum) => datum.response);
@@ -138,8 +135,8 @@ async function importList(list: string[], _class: string) {
 			.insertInto("ens_metadata")
 			.values(uniqueFormatted)
 			.onConflict((oc) =>
-				oc.column("address").doUpdateSet((eb) => ({
-					name: eb.ref("excluded.name"),
+				oc.column("name").doUpdateSet((eb) => ({
+					address: eb.ref("excluded.address"),
 					avatar: eb.ref("excluded.avatar"),
 					records: eb.ref("excluded.records"),
 				})),

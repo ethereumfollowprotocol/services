@@ -17,30 +17,25 @@ export async function ensMetadata() {
     const leaderboard: LeaderBoardRow[] = []
     const ensData: ENSProfile[] = []
     logger.log(colors.cyan('[ens]'), `Fetching ENS data for ${result.rows.length} leaderboard records...`)
-    let index = 0
 
-    const formattedBatches = arrayToChunks(result.rows, 10).map(batch =>
+    const formattedBatches = arrayToChunks(result.rows, 50).map(batch =>
       batch.map(row => `addresses[]=${row.address}`).join('&')
     )
     logger.log(colors.cyan('[ens]'), `Fetching ENS data in ${formattedBatches.length} chunks...`)
-    const response = await Promise.all(
-      formattedBatches.map(batch => {
-        return fetch(`${env.ENS_API_URL}/bulk/a?${batch}`)
-      })
-    )
-    logger.log(colors.cyan('[ens]'), `Resolving ENS requests...`)
-
-    const data = (await Promise.all(
-      response.map(async response => {
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait for 1 second
-        if (response.ok) {
-          return response.json()
+    const data: { response_length: number; response: ENSProfileResponse }[] = [];
+    for (const batch of formattedBatches) {
+        try {
+            const response = await fetch(`${env.ENS_API_URL}/bulk/a?${batch}`);
+            if (response.ok) {
+                const batchData = await response.json();
+                data.push(batchData);
+            } else {
+                logger.error(colors.red('[recommended]'), `Failed to fetch batch: ${batch}`);
+            }
+        } catch (error) {
+            logger.error(colors.red('[recommended]'), `Error fetching batch: ${batch}`, error);
         }
-      })
-    )) as {
-      response_length: number
-      response: ENSProfileResponse
-    }[]
+    }
     logger.log(colors.cyan('[ens]'), `Formatting ENS requests...`)
     const validResponses = data.filter(datum => datum)
     const fetchedRecords = validResponses.flatMap(datum => datum.response)
@@ -92,8 +87,8 @@ export async function ensMetadata() {
             .insertInto('ens_metadata')
             .values(batch)
             .onConflict(oc =>
-              oc.column('address').doUpdateSet(eb => ({
-                name: eb.ref('excluded.name'),
+              oc.column('name').doUpdateSet(eb => ({
+                address: eb.ref('excluded.address'),
                 avatar: eb.ref('excluded.avatar'),
                 records: eb.ref('excluded.records')
               }))
