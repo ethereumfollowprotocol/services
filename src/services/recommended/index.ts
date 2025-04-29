@@ -81,7 +81,7 @@ async function importList(list: string[], _class: string) {
 	logger.log(colors.yellow('[recommended]'), `fetchedRecords ${fetchedRecords.length}`);
 	logger.log(colors.yellow('[recommended]'), `filteredRecords ${filteredRecords.length}`);
 
-    const refetchFormatted = filteredRecords.map((record) => record.address.toLowerCase()); 
+    const refetchFormatted = filteredRecords.map((record) => record.address.toLowerCase()).filter((address) => address !== undefined && address !== null);
     const refetchBatches = arrayToChunks(refetchFormatted, 50).map((batch) =>
         batch.map((row) => `addresses[]=${row}`).join("&"),
     );
@@ -137,13 +137,20 @@ async function importList(list: string[], _class: string) {
 		const insertENSCache = await database
 			.insertInto("ens_metadata")
 			.values(uniqueFormatted)
-			.onConflict((oc) =>
-				oc.column("name").doUpdateSet((eb) => ({
-					address: eb.ref("excluded.address"),
-					avatar: eb.ref("excluded.avatar"),
-					records: eb.ref("excluded.records"),
-				})),
-			)
+            .onConflict((oc) =>
+                oc.column("name").doUpdateSet((eb) => ({
+                    address: eb.ref("excluded.address"),
+                    avatar: eb.ref("excluded.avatar"),
+                    records: eb.ref("excluded.records"),
+                })),
+            )
+            // .onConflict(oc =>
+            //     oc.column('address').doUpdateSet(eb => ({
+            //         name: eb.ref('excluded.name'),
+            //         avatar: eb.ref('excluded.avatar'),
+            //         records: eb.ref('excluded.records')
+            //     }))
+            // )
 			.executeTakeFirst();
 	}
 
