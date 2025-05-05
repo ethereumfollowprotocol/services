@@ -144,13 +144,13 @@ async function importList(list: string[], _class: string) {
                     records: eb.ref("excluded.records"),
                 })),
             )
-            // .onConflict(oc =>
-            //     oc.column('address').doUpdateSet(eb => ({
-            //         name: eb.ref('excluded.name'),
-            //         avatar: eb.ref('excluded.avatar'),
-            //         records: eb.ref('excluded.records')
-            //     }))
-            // )
+            .onConflict(oc =>
+                oc.column('address').doUpdateSet(eb => ({
+                    name: eb.ref('excluded.name'),
+                    avatar: eb.ref('excluded.avatar'),
+                    records: eb.ref('excluded.records')
+                }))
+            )
 			.executeTakeFirst();
 	}
 
