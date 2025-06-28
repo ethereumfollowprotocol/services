@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Development Guidlines
+## Development Guidelines
 - Do not modify files that are not relevant to your task
 - Do not make "while we're here" edits
 - Please observe and adhere to existing formatting and code style
