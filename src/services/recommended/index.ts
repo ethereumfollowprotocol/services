@@ -134,24 +134,41 @@ async function importList(list: string[], _class: string) {
 
 	if (uniqueFormatted.length > 0) {
 		logger.log(colors.yellow('[recommended]'), "Updating ENS data...");
-		const insertENSCache = await database
-			.insertInto("ens_metadata")
-			.values(uniqueFormatted)
-            .onConflict((oc) =>
-                oc.column("name").doUpdateSet((eb) => ({
-                    address: eb.ref("excluded.address"),
-                    avatar: eb.ref("excluded.avatar"),
-                    records: eb.ref("excluded.records"),
-                })),
-            )
-            .onConflict(oc =>
-                oc.column('address').doUpdateSet(eb => ({
-                    name: eb.ref('excluded.name'),
-                    avatar: eb.ref('excluded.avatar'),
-                    records: eb.ref('excluded.records')
-                }))
-            )
-			.executeTakeFirst();
+		
+		for (const record of uniqueFormatted) {
+			try {
+				await database
+					.insertInto("ens_metadata")
+					.values(record)
+					.onConflict((oc) =>
+						oc.column("address").doUpdateSet((eb) => ({
+							name: eb.ref("excluded.name"),
+							avatar: eb.ref("excluded.avatar"),
+							records: eb.ref("excluded.records"),
+						})),
+					)
+					.executeTakeFirst();
+			} catch (error: any) {
+				if (error?.constraint_name === "unique_name") {
+					// Handle name conflict: update the existing record with this name
+					try {
+						await database
+							.updateTable("ens_metadata")
+							.set({
+								address: record.address,
+								avatar: record.avatar,
+								records: record.records,
+							})
+							.where("name", "=", record.name)
+							.executeTakeFirst();
+					} catch (updateError) {
+						logger.error(colors.red('[recommended]'), `Failed to update ENS data for name ${record.name}:`, updateError);
+					}
+				} else {
+					logger.error(colors.red('[recommended]'), `Failed to insert/update ENS data for ${record.name}:`, error);
+				}
+			}
+		}
 	}
 
 	const formattedClass = filteredRecords.map((record) => {
