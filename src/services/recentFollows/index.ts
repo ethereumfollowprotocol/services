@@ -4,6 +4,7 @@ import { logger } from '#/logger'
 import type { RecentActivityRow } from '#/types'
 import { arrayToChunks } from '#/utilities'
 import { colors } from 'consola/utils';
+import { isAddress } from 'viem'
 
 export async function recentFollows(): Promise<void> {
   try {
@@ -43,16 +44,18 @@ export async function recentFollows(): Promise<void> {
     logger.log(colors.magentaBright("[RecentFollows]"), `Building latest follows for ${recentActivityResult.rows.length} records...`)
     let index = 0
     for (const row of recentActivityResult.rows) {
-        recents.push({
-            address: row.address,
-            name: row.name,
-            avatar: row.avatar,
-            header: row.header,
-            following: row.following,
-            followers: row.followers,
-            _index: row._index
-        })
-        index++
+        if(isAddress(row.address)) {
+            recents.push({
+                address: row.address,
+                name: row.name,
+                avatar: row.avatar,
+                header: row.header,
+                following: row.following,
+                followers: row.followers,
+                _index: row._index
+            })
+            index++
+        }
     }
     const uniqueDiscovers = recents.filter(
         (discover, index, self) => index === self.findIndex(d => d.address === discover.address)
